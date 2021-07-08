@@ -15,6 +15,11 @@ import argparse
 import tensorflow_ranking as tfr
 
 def boolean_string(s):
+    if s == 'True\r':
+        s = 'True'
+    elif s == 'False\r':
+        s='False'
+    
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
