@@ -193,9 +193,14 @@ def main():
             n_example_feature = num_gene_features
             list_size         = test_df.shape[0]
         
-        path_train = "data/tfrecords/"+ filename + "_train_" + str(split_nr) + ".tfrecord"
-        path_test  = "data/tfrecords/"+ filename + "_test" + str(split_nr) + ".tfrecord"
-
+        tf_record_dir = 'data/tfrecords/'
+        os.makedirs(tf_record_dir)
+        
+        path_train = tf_record_dir + filename + '_train_' + str(split_nr) + '.tfrecord'
+        path_test  = tf_record_dir + filename + '_test' + str(split_nr) + '.tfrecord'
+        
+        
+        
         print("writing train record")
         # create ELWC tfrecords: padding so that each cells list has the same size, needed for tf-ranking
         r_cv.create_ELWC_tfrecord(contexts_train, filename=path_train,
