@@ -10,24 +10,22 @@ import os
 import joblib
 import pickle
 
-flag_use_pickle = True # specify if you want to use pickle or joblib
 
 tf.__version__ # I used 2.1.0
 
 
-
-def create_feature_dict(data_df,
-                        data_dir = 'data/gdsc_data/',
-                        gene_feature = 'paccmann',
-                        cell_wise = True):
-    if not flag_use_pickle:
+# function to load the cell line data and drug data to a dictionary
+# load_type should be in the range of {csv,joblib,pickle}
+def create_cell_line_drug_dicts(data_dir = 'data/gdsc_data/',
+                                load_type = 'csv'):
+    if load_type == 'joblib':
         cell_line_path = data_dir + 'cell_line_data.joblib'
         drug_path      = data_dir + 'drug_data.joblib'
         
         # load data
         cell_line_dict = joblib.load(cell_line_path)
         drug_dict = joblib.load(drug_path)  
-    else:
+    elif load_type == 'pickle':
         cell_line_path = data_dir + 'cell_line_data.pickle'
         drug_path      = data_dir + 'drug_data.pickle'
         
@@ -36,9 +34,75 @@ def create_feature_dict(data_df,
             
         with open(drug_path, 'rb') as handle:
             drug_dict = pickle.load(handle)
+    elif load_type == 'csv':
+        # load cell line data
+        paccmann_gene_list_pd = pd.read_csv(data_dir + 'dicts_from_csvs/paccmann_gene_list_dict.csv',header=None)
+        paccmann_gene_list = list(np.array(paccmann_gene_list_pd.values).flatten())
+        cell_line_dict = {'paccmann_gene_list':paccmann_gene_list}
         
-    
-     
+        cell_line_pd = pd.read_csv(data_dir + 'dicts_from_csvs/cell_line.csv',dtype=str)
+        inner_cell_line_dict_pd = dict()
+        for i in range(cell_line_pd.shape[0]):
+            cur_line = cell_line_pd.iloc[i]
+            values = cur_line.values
+            cur_key = values[0]
+            features = np.array(values[1:],dtype=np.float64)
+            inner_cell_line_dict_pd[cur_key] = dict()
+            inner_cell_line_dict_pd[cur_key]['paccmann_vector'] = features
+        cell_line_dict['cell_line_dict'] = inner_cell_line_dict_pd
+        
+        # load drug data
+        token_id_dict_pd = dict()
+        fobj = open(data_dir + 'dicts_from_csvs/token_id_mapping.txt','r')
+        fobj_str = fobj.read()
+        fobj_lines = fobj_str.split('\n')
+        for line in fobj_lines:
+            line_split = line.split('\t')
+            if len(line_split) == 2:
+                token_id_dict_pd[line_split[0]] = int(line_split[1])
+        fobj.close()
+        id_token_dict_pd = dict()
+        for key in token_id_dict_pd.keys():
+            id_token_dict_pd[token_id_dict_pd[key]] = key
+        drug_dict = {'token_id_dict':token_id_dict_pd,
+                       'id_token_dict':id_token_dict_pd}
+        
+        drug_tsv_df = pd.read_csv(data_dir + 'dicts_from_csvs/drug_data.tsv',dtype=str)
+        drugs = list(drug_tsv_df['drug'])
+        drug_names = list(drug_tsv_df['drug_name'])
+        canonical_smiles = list(drug_tsv_df['canonical_smiles'])
+        inner_drug_dict_pd = dict()
+        for i in range(len(drugs)):
+            inner_drug_dict_pd[drugs[i]] = dict()
+            cur_drug_name = drug_names[i]
+            if str(cur_drug_name) == 'nan':
+                cur_drug_name = ''
+            cur_smiles = canonical_smiles[i]
+            if str(cur_smiles) == 'nan':
+                cur_smiles = ''
+            inner_drug_dict_pd[drugs[i]]['drug_name'] = cur_drug_name
+            inner_drug_dict_pd[drugs[i]]['canonical_smiles'] = cur_smiles        
+        
+        drug_pd = pd.read_csv(data_dir + 'dicts_from_csvs/drug_smiles_data.csv',dtype=str)
+        for i in range(drug_pd.shape[0]):
+            cur_line = drug_pd.iloc[i]
+            values = cur_line.values
+            cur_key = values[0]
+            features = np.array(values[1:],dtype=np.float64)
+            #print(cur_line)
+            inner_drug_dict_pd[cur_key]['feature_vec'] = features 
+            
+        drug_dict['drug_dict'] = inner_drug_dict_pd
+    return cell_line_dict, drug_dict
+
+
+def create_feature_dict(data_df,
+                        data_dir = 'data/gdsc_data/',
+                        gene_feature = 'paccmann',
+                        cell_wise = True,
+                        load_type = 'csv'):
+    cell_line_dict, drug_dict = create_cell_line_drug_dicts(data_dir = data_dir,
+                                load_type = load_type)
     
     
     cell_lines = cell_line_dict['cell_line_dict']
@@ -90,7 +154,7 @@ def create_feature_dict_from_dicts(data_df,
                         drug_dict,
                         gene_feature = 'paccmann',
                         cell_wise = True):
-    
+        
     cell_lines = cell_line_dict
     drugs = drug_dict
     
@@ -137,24 +201,11 @@ def create_feature_dict_from_dicts(data_df,
 def create_context_dict(data_df,
                         data_dir = 'data/gdsc_data/',
                         gene_feature = 'paccmann',
-                        cell_wise = True):
+                        cell_wise = True,
+                        load_type = 'csv'):
                         
-    if not flag_use_pickle:
-        cell_line_path = data_dir + 'cell_line_data.joblib'
-        drug_path      = data_dir + 'drug_data.joblib'
-        
-        # load data
-        cell_line_dict = joblib.load(cell_line_path)
-        drug_dict = joblib.load(drug_path)  
-    else:
-        cell_line_path = data_dir + 'cell_line_data.pickle'
-        drug_path      = data_dir + 'drug_data.pickle'
-        
-        with open(cell_line_path, 'rb') as handle:
-            cell_line_dict = pickle.load(handle)
-            
-        with open(drug_path, 'rb') as handle:
-            drug_dict = pickle.load(handle)
+    cell_line_dict, drug_dict = create_cell_line_drug_dicts(data_dir = data_dir,
+                                load_type = load_type)
     
     
     cell_lines = cell_line_dict['cell_line_dict']
