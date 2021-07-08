@@ -47,6 +47,7 @@ def main():
     parser.add_argument('-drug_type','--drug_type', type=str, default='all')
     parser.add_argument('-drug_type_path','--drug_type_path',type=str, default='data/gdsc_data/drugs.txt')
     parser.add_argument('-drug_repurposing', '--drug_repurposing', type=boolean_string, default=False)
+    parser.add_argument('-tf_record_dir','--tf_record_dir',type=str, default = 'data/tfrecords/')
     
     args = parser.parse_args()    
     
@@ -71,9 +72,13 @@ def main():
     drug_type = args.drug_type
     drug_type_path = args.drug_type_path
     drug_repurposing = args.drug_repurposing
+    tf_record_dir = args.tf_record_dir
     
     if not os.path.exists(pred_dir):
         os.makedirs(pred_dir)
+        
+    if not os.path.exists(tf_record_dir):
+        os.makedirs(tf_record_dir)
     
     save_predictions = True
     
@@ -192,9 +197,6 @@ def main():
             n_context_feature = num_smiles_features
             n_example_feature = num_gene_features
             list_size         = test_df.shape[0]
-        
-        tf_record_dir = 'data/tfrecords/'
-        os.makedirs(tf_record_dir)
         
         path_train = tf_record_dir + filename + '_train_' + str(split_nr) + '.tfrecord'
         path_test  = tf_record_dir + filename + '_test' + str(split_nr) + '.tfrecord'
