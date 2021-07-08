@@ -12,15 +12,7 @@ import os
 import numpy as np
 import sys
 import argparse
-
-try:
-    import tensorflow_ranking as tfr
-except ImportError:
-    #!pip install -q tensorflow_ranking
-    import tensorflow_ranking as tfr
-if(tf.__version__ != '2.1.0'):
-    print("Warning: tf.__version__ should be 2.1.0. Continue.")
-    
+import tensorflow_ranking as tfr
 
 def boolean_string(s):
     if s not in {'False', 'True'}:
@@ -146,26 +138,13 @@ def main():
         
             # select drugs we want to use the train the model    
             column_names = np.array(list(test_df.columns))
-            """
-            print(column_names)
-            print(type(column_names))
-            print(type(column_names[0]))
-            print(column_names.shape)
-            """
+
             use_col_ids = []
             used_drugs = []
             for d_i in range(len(drug_list)):
                 cur_drug = np.str(drug_list[d_i].strip())
                 cur_id = np.where(column_names == cur_drug)
-                """
-                for jjj in range(len(column_names)):
-                    print(column_names[jjj] + ' vs. ' + cur_drug +\
-                    ' -> ' + str(column_names[jjj] == cur_drug))
-                print(allo)
-                print(cur_drug)
-                print(type(cur_drug))
-                print(column_names == cur_drug)
-                """
+
                 if len(cur_id) > 0:
                     try:
                         cur_id = cur_id[0]
@@ -233,18 +212,6 @@ def main():
                     print('failed to delete ' + cur_model_dir + '/' + file_list[i])
 
         # run model
-        print()
-        print()
-        print("n_context_features")
-        print(n_context_feature)
-        print()
-        print()
-        print()
-        print()
-        print("n_example_features")
-        print(n_example_feature)
-        print()
-        print()
         ranking_model = Ranker(scoring=scoring,
                                 loss=loss,
                                 model_dir=cur_model_dir,
