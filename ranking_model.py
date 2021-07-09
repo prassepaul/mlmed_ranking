@@ -109,7 +109,6 @@ class Model():
             example_feature_column = tf.feature_column.numeric_column(
             "document_features", shape=(self.n_example_feature), default_value=None, dtype=dtype
             )
-            print("def example feature clolumns")
             return {"document_features": example_feature_column}
 
         
@@ -261,7 +260,6 @@ class Model():
             example_feature_column = tf.feature_column.numeric_column(
             "document_features", shape=(self.n_example_feature), default_value=None, dtype=dtype
             )
-            print("def example feature clolumns")
             return {"document_features": example_feature_column}
 
         
@@ -403,7 +401,6 @@ class Model():
             example_feature_column = tf.feature_column.numeric_column(
             "document_features", shape=(self.n_example_feature), default_value=None, dtype=dtype
             )
-            print("def example feature clolumns")
             return {"document_features": example_feature_column}
 
         
