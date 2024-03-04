@@ -21,3 +21,4 @@ We heuristically optimize ranking metric NDCG to emphasize a focus on highly pro
 
 ## Requirements
 * See requirements.txt
+    * using conda you can create the environment using the *.yml file: conda env create -f environment.yml
